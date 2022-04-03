@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from Generator.SudokuGenerator import SudokuGenerator
+from Generator.sudoku_generator import SudokuGenerator
 import numpy as np
 
 class SudokuScrapperSudokuweb(SudokuGenerator):

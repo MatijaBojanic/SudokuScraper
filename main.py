@@ -1,4 +1,4 @@
-from GameUI.Sudoku import Sudoku
-from Generator.SudokuScrapperSudokuweb import SudokuScrapperSudokuweb
+from GameUI.sudoku import Sudoku
+from Generator.sudoku_scrapper_sudokuweb import SudokuScrapperSudokuweb
 
 Sudoku(SudokuScrapperSudokuweb())
