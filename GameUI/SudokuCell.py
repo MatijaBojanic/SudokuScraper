@@ -1,5 +1,14 @@
 import tkinter as tk
 
+#TODO: Consider making a checker for valid inputs
+
+
+# We have a sudoku container
+# We have sudokuCells
+# an invalid input would be checked on sudoku cell level
+# to get it we need to track current sudoku status
+# Row - column must be 1 to 9 and each square should have it. To check this we have to keep track of current inputs
+
 
 class SudokuCell(tk.Entry):
     def __init__(self, expected_number, master=None, **kwargs):
@@ -35,6 +44,12 @@ class SudokuCell(tk.Entry):
     def leading_char_added(self, input_value):
         if input_value == '':
             return ''
+        if len(input_value) < 2:
+            return input_value
         if input_value[-1] == self.old_value:
             input_value = input_value[-2]
         return input_value
+
+    def input_value(self,new_value):
+        self.old_value = new_value
+        self.set(new_value)

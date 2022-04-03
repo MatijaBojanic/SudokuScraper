@@ -13,7 +13,6 @@ class SudokuScrapperSudokuweb(SudokuGenerator):
     def get_html_content(self):
         sudoku_response = requests.get(self.web_url)
         return sudoku_response.text
-        # thorw error?
 
     def parse_html(self, htmlContent):
         soup = BeautifulSoup(htmlContent, 'lxml')
