@@ -13,20 +13,14 @@ class SudokuCell(tk.Entry):
         self.column = column
         self.var = tk.StringVar()
         tk.Entry.__init__(self, master, textvariable=self.var, **kwargs)
-
         self.expected_value = expected_number
         self.old_value = ''
         self.var.trace('w', self.check)
         self.get, self.set = self.var.get, self.var.set
-        # self.sudoku.check_unique(self.row, self.column)
 
-    # Check if the value is correctly inputted (Deal with leading input)
-    # Check if the input is valid. If the input is 0 or '' remove the current input
     def check(self, *args):
-        #leading char check
         input_value = self.get().strip()
         input_value = self.leading_char_added(input_value)
-        #check for digit input
         if input_value.isdigit():
             if input_value[-1] != '0':
                 self.old_value = input_value[-1]
@@ -39,18 +33,12 @@ class SudokuCell(tk.Entry):
             self.set('')
         else:
             self.set(self.old_value)
-        #check if the inputed digit is valid or make the field red
         if self.get() != '':
             if self.get() in self.sudoku.used_values(self.row, self.column):
                 self.configure(foreground='Red')
             else:
                 self.configure(foreground='Black')
 
-
-
-
-    #   Check if the added char was added as the leading char
-    #   Lets say the old input was '2', and we add a '3' such that the new input becomes '32'
     def leading_char_added(self, input_value):
         if input_value == '':
             return ''

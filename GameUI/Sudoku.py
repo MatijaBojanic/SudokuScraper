@@ -5,11 +5,10 @@ import numpy as np
 from GameUI.SudokuCell import SudokuCell
 
 
-# TODO: Add button for cell input support
-# TODO: Ask for name and surname and save the result under db with format name_surname.txt
 # TODO-OPTIONAL: Auto solve button
 class Sudoku:
     def __init__(self, sudoku_generator):
+        self.sudoku_solution = None
         self.current_state = None
         self.input_fields = None
         self.sudoku_generator = sudoku_generator
@@ -22,6 +21,7 @@ class Sudoku:
     def make_grid(self):
         self.input_fields = []
         sudoku_array = self.sudoku_generator.get_sudoku()
+        self.sudoku_solution = sudoku_array
         self.current_state = sudoku_array
         # we need to track current_state and from that deduce the allowed input values. Every time something is inputed
         # we would need to update the list. And sudokuCells should always have acces to that list
@@ -38,8 +38,6 @@ class Sudoku:
                     temp = tk.Entry(readonlybackground='#ADD8E6', textvariable=v, justify='center', state='readonly')
                 temp.place(x=x_cord, y=row * 40, width=40, height=40)
                 x_cord = x_cord + 40
-
-
 
         reset_button = tk.Button(self.window, text="New Sudoku", command=self.make_grid)
         submit_button = tk.Button(self.window, text="Submit", command=self.all_answers)
@@ -79,26 +77,54 @@ class Sudoku:
                                         command=lambda: fail_button.place_forget())
                 fail_button.place(relx=0.5, rely=0.5, anchor='center')
                 return False
-        win_button = tk.Button(self.window, text="You Won!  Press here for a new puzzle!", command=self.make_grid)
-        win_button.place(relx=0.5, rely=0.5, anchor='center')
+        self.won_game()
 
+    def won_game(self):
+        self.newWindow = tk.Toplevel(self.window)
+        self.newWindow.title("You Solved It!")
+        self.newWindow.geometry("200x120")
+        name_var = tk.StringVar()
+        surname_var = tk.StringVar()
+        name_label = tk.Label(self.newWindow, text='Name', font=('calibre', 10, 'bold'))
+        name_entry = tk.Entry(self.newWindow, textvariable=name_var, font=('calibre', 10, 'normal'))
+        surname_label = tk.Label(self.newWindow, text='Surname', font=('calibre', 10, 'bold'))
+        surname_entry = tk.Entry(self.newWindow, textvariable=surname_var, font=('calibre', 10, 'normal'))
+        save_btn = tk.Button(self.newWindow, text='Save Solution',
+                             command=lambda: self.save_game_and_create_new(self.newWindow, name_var, surname_var))
+        name_label.pack()
+        name_entry.pack()
+        surname_label.pack()
+        surname_entry.pack()
+        save_btn.pack()
 
-    def roundup_to_nearest_three(self, index):
+    def save_game_and_create_new(self, top, name, surname):
+        # save to db name_surname.txt
+        file_name = name.get() + '_' + surname.get() + '.txt'
+        if file_name == '_.txt':
+            file_name = 'solution.txt'
+        f = open('./db/' + file_name, 'w')
+        f.write(np.array2string(self.current_state))
+        f.close()
+        # close new window
+        top.destroy()
+        top.update()
+        # Make a new game
+        pass
+
+    @staticmethod
+    def roundup_to_nearest_three(index):
         roundup_float = np.ceil((index + 1) / 3) * 3
         roundup_int = np.int(roundup_float)
         return roundup_int
 
-
-    def used_values(sudoku, row, column):
-        row_values = np.unique(sudoku.current_state[row, :])
-        col_values = np.unique(sudoku.current_state[:, column])
-        row_end_pos = sudoku.roundup_to_nearest_three(row)
-        col_end_pos = sudoku.roundup_to_nearest_three(column)
-        box_values = np.unique(sudoku.current_state[row_end_pos - 3:row_end_pos, col_end_pos - 3:col_end_pos])
+    def used_values(self, row, column):
+        row_values = np.unique(self.current_state[row, :])
+        col_values = np.unique(self.current_state[:, column])
+        row_end_pos = self.roundup_to_nearest_three(row)
+        col_end_pos = self.roundup_to_nearest_three(column)
+        box_values = np.unique(self.current_state[row_end_pos - 3:row_end_pos, col_end_pos - 3:col_end_pos])
         all_values = np.concatenate((row_values, col_values, box_values), axis=None)
-
-
         used_values = np.unique(all_values)
-        if(used_values[0] == ''):
+        if used_values[0] == '':
             used_values = np.delete(used_values, 0)
         return used_values
