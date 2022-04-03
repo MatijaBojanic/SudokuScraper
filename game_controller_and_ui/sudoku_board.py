@@ -1,65 +1,55 @@
+"""UI for sudoku"""
 import tkinter as tk
-import numpy as np
-from GameUI.SudokuCell import SudokuCell
+from game_controller_and_ui.sudoku_cell import SudokuCell
 
 
 class SudokuBoard:
+    """Sudoku board container ui"""
     def __init__(self, sudoku_game_logic):
+        self.save_game_window = None
         self.sudoku_game_logic = sudoku_game_logic
         self.input_fields = []
         self.sudoku_board_state = None
         self.window = tk.Tk()
         self.window.maxsize(width=500, height=440)
         self.window.minsize(width=500, height=440)
-        # self.make_input_fields()
+        self.make_input_fields()
         self.make_buttons()
-        # self.window.mainloop()
 
     def run(self):
+        """You need to run after creating every ui
+        element otherwise tk fails"""
         self.window.mainloop()
 
-    # Grab another puzzle and make a grid for it
     def new_game_ui(self, sudoku_puzzle):
+        """Get puzzle and fill input fields"""
         self.sudoku_board_state = sudoku_puzzle
-        self.make_grid()
+        self.fill_grid()
 
-    def make_grid(self):
-        for row in range(0, len(self.sudoku_board_state[0])):
+    def fill_grid(self):
+        """Go through each input field and give it new value"""
+        input_fields_counter = 0
+        for row in range(0, 9):
+            for column in range(0, 9):
+                self.input_fields[input_fields_counter].update_original_value(self.sudoku_board_state[row][column])
+                input_fields_counter = input_fields_counter + 1
+
+    def make_input_fields(self):
+        """Create input fields"""
+        for row in range(0, 9):
             x_axis = 0
-            for column in range(0, len(self.sudoku_board_state[row])):
-                if self.sudoku_board_state[row][column] == '':
-                    temp = SudokuCell(self, row, column, self.sudoku_board_state[row][column], self.window)
-                    self.input_fields.append(temp)
-                else:
-                    locked_field_value = tk.StringVar(self.window, value=str(self.sudoku_board_state[row][column]))
-                    temp = tk.Entry(readonlybackground='#ADD8E6', textvariable=locked_field_value, state='readonly')
-                temp.place(x=x_axis, y=row * 40, width=40, height=40)
+            for column in range(0, 9):
+                sudoku_cell = SudokuCell(self, row, column, '', self.window)
+                self.input_fields.append(sudoku_cell)
+                sudoku_cell.place(x=x_axis, y=row * 40, width=40, height=40)
                 x_axis = x_axis + 40
 
-
-
-    # def make_input_fields(self):
-    #     for row in range(0, 9):
-    #         x_axis = 0
-    #         for column in range(0, 9):
-    #             sudoku_cell = SudokuCell(self, self.sudoku_game_logic, row, column,'', self.window)
-    #             self.input_fields.append(sudoku_cell)
-    #             sudoku_cell.place(x=x_axis, y=row * 40, width=40, height=40)
-    #             x_axis = x_axis + 40
-
-
-    # def update_grid(self):
-    #     self.input_fields[0].update_original_value('2')
-        # input_fields_counter = 0
-        # for row in range(0, 9):
-        #     for column in range(0, 9):
-        #         self.input_fields[input_fields_counter].update_original_value(self.sudoku_board_state[row][column])
-
-
-
     def make_buttons(self):
-        reset_button = tk.Button(self.window, text="New Sudoku", command=lambda:self.sudoku_game_logic.new_game())
-        submit_button = tk.Button(self.window, text="Submit", command=self.win_check)  # TODO
+        """ Make new_game, submit, show_solution buttons
+        as well as a numpad with clear button"""
+        new_puzzle_button = tk.Button(self.window, text="New Sudoku", command=lambda:self.sudoku_game_logic.new_game())
+        submit_button = tk.Button(self.window, text="Submit", command=self.win_check)
+        show_solution_button = tk.Button(self.window, text="Show Solution", command=self.show_solution)
         input_one = tk.Button(self.window, text="1", command=lambda: self.set_text("1", self.window.focus_get()))
         input_two = tk.Button(self.window, text="2", command=lambda: self.set_text("2", self.window.focus_get()))
         input_three = tk.Button(self.window, text="3", command=lambda: self.set_text("3", self.window.focus_get()))
@@ -70,8 +60,6 @@ class SudokuBoard:
         input_eight = tk.Button(self.window, text="8", command=lambda: self.set_text("8", self.window.focus_get()))
         input_nine = tk.Button(self.window, text="9", command=lambda: self.set_text("9", self.window.focus_get()))
         input_clear = tk.Button(self.window, text="Clear", command=lambda: self.set_text("", self.window.focus_get()))
-        reset_button.place(relx=0.5, rely=0.95, anchor='center')
-        submit_button.place(relx=0.5, rely=0.87, anchor='center')
         input_one.place(relx=0.75, rely=0.25)
         input_two.place(relx=0.83, rely=0.25)
         input_three.place(relx=0.91, rely=0.25)
@@ -82,20 +70,28 @@ class SudokuBoard:
         input_eight.place(relx=0.83, rely=0.05)
         input_nine.place(relx=0.91, rely=0.05)
         input_clear.place(relx=0.81, rely=0.35)
+        new_puzzle_button.place(relx=0.5, rely=0.95, anchor='center')
+        submit_button.place(relx=0.5, rely=0.87, anchor='center')
+        show_solution_button.place(relx=0.77, rely=0.92)
 
-    def set_text(self, text, cell):
-        cell.input_value(text)
-        return
+    def show_solution(self):
+        """Show solution given puzzle"""
+        self.sudoku_board_state = self.sudoku_game_logic.sudoku_solution
+        self.fill_grid()
 
     def win_check(self):
-        if self.sudoku_game_logic.win_check():
+        """Check if the game is won in the controller
+        If won ask for name+surname to save the result
+        Otherwise popup fail msg"""
+        if self.sudoku_game_logic.is_solved():
+            self.won_game_window()
+        else:
             fail_button = tk.Button(self.window, text="The solution does not fit. Try again :)",
-                                        command=lambda: fail_button.place_forget())
+                                    command=lambda: fail_button.place_forget())
             fail_button.place(relx=0.5, rely=0.5, anchor='center')
-            return False
-        self.won_game_window()
 
     def won_game_window(self):
+        """Open new window form that asks for name and surname inputs"""
         self.save_game_window = tk.Toplevel(self.window)
         self.save_game_window.title("You Solved It!")
         self.save_game_window.geometry("200x120")
@@ -114,8 +110,16 @@ class SudokuBoard:
         save_btn.pack()
 
     def won_game(self, save_game_window, name, surname):
+        """Submit name and surname results to the controller,
+        close the form window and start a new game"""
         self.sudoku_game_logic.save_game(name, surname)
         save_game_window.destroy()
         save_game_window.update()
-        self.sudoku_game_logic.new_game() #TODO WHAT HERE
+        self.sudoku_game_logic.new_game()
+
+    @staticmethod
+    def set_text(text, cell):
+        """Put text into input_field. Used by numpad buttons"""
+        cell.input_value(text)
+        return
 
