@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from Generator.SudokuGenerator import SudokuGenerator
-
+import numpy as np
 
 class SudokuScrapperSudokuweb(SudokuGenerator):
     web_url = 'https://www.sudokuweb.org/'
@@ -17,11 +17,12 @@ class SudokuScrapperSudokuweb(SudokuGenerator):
     def parse_html(self, htmlContent):
         soup = BeautifulSoup(htmlContent, 'lxml')
         table_body = soup.table
-        sudoku = []
+        sudoku = np.empty((0,9), str)
         rows = table_body.find_all('tr')
         for row in rows:
             cols = row.find_all('td')
             cols = [elem.text.strip() for elem in cols]
-            sudoku.append([elem for elem in cols if elem])
+            sudoku = np.append(sudoku, np.array([cols]), axis=0)
         return sudoku
 
+SudokuScrapperSudokuweb().get_sudoku()
